@@ -5,7 +5,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "concurrently -k \"tsc -w\" \"nodemon ./dist/server.js\"",
-    "prod": "concurrently -k \"tsc -w\" \"node ./dist/server.js\"",
+    "prod": "node ./dist/server.js",
+    "build": "tsc -w",
     "createSeeder": "concurrently -k \"tsc -w\" \"node ./dist/seeds/create_seeder.js\"",
     "removeSeeder": "concurrently -k \"tsc -w\" \"node ./dist/seeds/remove_seeder.js\""
   },

@@ -196,11 +196,11 @@ const server = new ApolloServer({
     typeDefs,
     resolvers,
     context: ({req})=>{
-        console.log(req.headers.authorization)
-        return{
-            token: req.headers.authorization,
-            pubSub
-        }  
+        // console.log(req.headers.authorization)
+        // return{
+        //     token: req.headers.authorization,
+        //     pubSub
+        // }  
     }
 }
 )
