@@ -217,11 +217,11 @@ const server = new apollo_server_1.ApolloServer({
     typeDefs,
     resolvers,
     context: ({ req }) => {
-        console.log(req.headers.authorization);
-        return {
-            token: req.headers.authorization,
-            pubSub
-        };
+        // console.log(req.headers.authorization)
+        // return{
+        //     token: req.headers.authorization,
+        //     pubSub
+        // }  
     }
 });
 server.listen(`${port}`).then(({ url }) => console.log(`Server is running at ${url}`));
