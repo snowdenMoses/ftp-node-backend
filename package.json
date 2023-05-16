@@ -1,0 +1,39 @@
+{
+  "name": "node_graphql_server_with_prisma",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "concurrently -k \"tsc -w\" \"nodemon ./dist/server.js\"",
+    "createSeeder": "concurrently -k \"tsc -w\" \"node ./dist/seeds/create_seeder.js\"",
+    "removeSeeder": "concurrently -k \"tsc -w\" \"node ./dist/seeds/remove_seeder.js\""
+  },
+  "dependencies": {
+    "@prisma/client": "^4.13.0",
+    "@types/bcrypt": "^5.0.0",
+    "@types/uuid": "^9.0.1",
+    "apollo-server": "^3.12.0",
+    "bcrypt": "^5.1.0",
+    "dataloader": "^2.2.2",
+    "graphql": "^16.6.0",
+    "graphql-subscriptions": "^2.0.0",
+    "graphql-yoga": "^3.9.1",
+    "jsonwebtoken": "^9.0.0",
+    "prisma": "^4.13.0",
+    "uuid": "^9.0.0",
+    "uuidv4": "^6.2.13"
+
+  },
+  "devDependencies": {
+    "@faker-js/faker": "^8.0.0",
+    "@types/node": "^18.16.3",
+    "concurrently": "^8.0.1",
+    "nodemon": "^2.0.22",
+    "ts-node": "^10.9.1",
+    "typescript": "^5.0.4"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": ""
+}
