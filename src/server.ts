@@ -7,7 +7,7 @@ import { cacheUser } from "./vendorsLoader";
 import currentUser from "./vendor/currentVendor";
 
 
-
+const port = process.env.PORT || 4000
 const pubSub = new PubSub()
 export const prisma = new PrismaClient()
 
@@ -205,4 +205,4 @@ const server = new ApolloServer({
 }
 )
 
-server.listen(4000).then(({url}) => console.log(`Server is running at ${url}`))
+server.listen(`${port}`).then(({url}) => console.log(`Server is running at ${url}`))

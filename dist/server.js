@@ -19,6 +19,7 @@ const client_1 = require("@prisma/client");
 const bcrypt_1 = __importDefault(require("bcrypt"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const vendorsLoader_1 = require("./vendorsLoader");
+const port = process.env.PORT || 4000;
 const pubSub = new graphql_subscriptions_1.PubSub();
 exports.prisma = new client_1.PrismaClient();
 const typeDefs = (0, apollo_server_1.gql) `
@@ -223,4 +224,4 @@ const server = new apollo_server_1.ApolloServer({
         };
     }
 });
-server.listen(4000).then(({ url }) => console.log(`Server is running at ${url}`));
+server.listen(`${port}`).then(({ url }) => console.log(`Server is running at ${url}`));
