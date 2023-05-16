@@ -86,11 +86,11 @@ const resolvers = {
         async vendor(parent:any, {id}:any, ctx:any, info:any){
             return await prisma.vendor.findUnique({where:{id}})
         },
-        async currentVendor(_: any, __: any, { token }:any, info:any){
-            const userId = await jwt.verify(token, 'secret')
-            console.log(userId)
-            return await prisma.vendor.findUnique({ where: { id: userId }})
-        },
+        // async currentVendor(_: any, __: any, { token }:any, info:any){
+        //     const userId = await jwt.verify(token, 'secret')
+        //     console.log(userId)
+        //     return await prisma.vendor.findUnique({ where: { id: userId }})
+        // },
         async vendors(){
             return await prisma.vendor.findMany()
         },
