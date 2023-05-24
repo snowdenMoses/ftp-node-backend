@@ -14,20 +14,21 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.prisma = void 0;
 const apollo_server_1 = require("apollo-server");
-const graphql_subscriptions_1 = require("graphql-subscriptions");
 const client_1 = require("@prisma/client");
 const bcrypt_1 = __importDefault(require("bcrypt"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const vendorsLoader_1 = require("./vendorsLoader");
+const vendorIdFromToken_1 = __importDefault(require("./vendor/vendorIdFromToken"));
+const aws_1 = __importDefault(require("./aws"));
 const port = process.env.PORT || 4000;
-const pubSub = new graphql_subscriptions_1.PubSub();
 exports.prisma = new client_1.PrismaClient();
 const typeDefs = (0, apollo_server_1.gql) `
 type Query{
-    vendor(id: ID): Vendor
+    vendor(id: String): Vendor
     vendors: [Vendor]
     products: [Product]
     currentVendor: Vendor
+    categories: [Category]
 }
 type Vendor{
     id: String
@@ -48,6 +49,28 @@ type Product{
     created_at: String
     updated_at: String
     vendor: Vendor
+    categories: [Category]
+}
+type Image{
+    id: String
+    url: String
+    product: Product
+    created_at: String
+    updated_at: String
+}
+type Category{
+    id: String
+    name: String
+    products: [Product]
+    created_at: String
+    updated_at: String
+}
+type CategoryProduct{
+    id: String
+    category: [Category]
+    product: [Product]
+    created_at: String
+    updated_at: String
 }
 
 type Mutation{
@@ -56,10 +79,16 @@ type Mutation{
     deleteProduct(id: String): Product
     updateVendor(id: String, data: updateVendorInput): Vendor
     login(data: vendorLoginInput): Token
+    createCategory(data: CreateCategoryInput): CategoryPayload
 }
 type Token{
     vendorDetails: Vendor
     token: String
+    message: String
+}
+type CategoryPayload{
+    category: Category
+    message: String
 }
 
 # type Subscription{
@@ -78,6 +107,11 @@ input createProductInput{
     description: String
     price: Int
     vendor_id: String
+    imageFile: String
+    categories: [String]!
+}
+input CreateCategoryInput{
+    name: String
 }
 
 input vendorLoginInput{
@@ -99,11 +133,17 @@ const resolvers = {
                 return yield exports.prisma.vendor.findUnique({ where: { id } });
             });
         },
-        currentVendor(_, __, { token }, info) {
+        currentVendor(_, __, { currenUserId }, info) {
             return __awaiter(this, void 0, void 0, function* () {
-                const userId = yield jsonwebtoken_1.default.verify(token, 'secret');
-                console.log(userId);
-                return yield exports.prisma.vendor.findUnique({ where: { id: userId } });
+                console.log(currenUserId);
+                if (currenUserId) {
+                    try {
+                        return yield exports.prisma.vendor.findUnique({ where: { id: currenUserId } });
+                    }
+                    catch (err) {
+                        console.log("User not Found");
+                    }
+                }
             });
         },
         vendors() {
@@ -113,19 +153,56 @@ const resolvers = {
         },
         products() {
             return __awaiter(this, void 0, void 0, function* () {
-                return yield exports.prisma.product.findMany();
+                return yield exports.prisma.product.findMany({ orderBy: {
+                        created_at: "desc"
+                    } });
+            });
+        },
+        categories() {
+            return __awaiter(this, void 0, void 0, function* () {
+                return yield exports.prisma.category.findMany();
             });
         }
     },
     Product: {
-        vendor(parent, args, { userToken }, info) {
+        vendor(parent, args, ctx, info) {
             // return prisma.vendor.findUnique({where:{id: parent.vendor_id}})
             return vendorsLoader_1.cacheUser.load(parent.vendor_id);
+        },
+        categories(parent, args, ctx, info) {
+            return __awaiter(this, void 0, void 0, function* () {
+                const parent_id = parent.id;
+                const category_product = yield exports.prisma.$queryRaw `
+            SELECT categories.name, categories.id
+            FROM categories_products
+            JOIN categories ON  categories.id  = categories_products.category_id
+            JOIN products ON  products.id = categories_products.product_id
+            WHERE products.id = ${parent_id}
+            ;
+             `;
+                return category_product;
+            });
         }
     },
     Vendor: {
         products(parent, args, ctx, info) {
             return exports.prisma.product.findMany({ where: { vendor_id: parent.id } });
+        }
+    },
+    Category: {
+        products(parent, args, ctx, info) {
+            return __awaiter(this, void 0, void 0, function* () {
+                const parent_id = parent.id;
+                const category_product = yield exports.prisma.$queryRaw `
+            SELECT products.name, products.id, products.description, products.price
+            FROM categories_products
+            JOIN categories ON  categories.id  = categories_products.category_id
+            JOIN products ON  products.id = categories_products.product_id
+            WHERE categories.id = ${parent_id}
+            ;
+             `;
+                return category_product;
+            });
         }
     },
     Mutation: {
@@ -155,17 +232,43 @@ const resolvers = {
                 if (!isUser)
                     throw new Error("Login Details not correct");
                 const token = jsonwebtoken_1.default.sign({
-                    data: vendorDetails === null || vendorDetails === void 0 ? void 0 : vendorDetails.id
+                    userId: vendorDetails === null || vendorDetails === void 0 ? void 0 : vendorDetails.id
                 }, 'secret', { expiresIn: 60 * 60 });
-                return { vendorDetails, token };
+                return { vendorDetails, token, message: "You have successfully Logged in" };
             });
         },
         createProduct(parent, args, ctx, info) {
             return __awaiter(this, void 0, void 0, function* () {
+                console.log("Products Args", args);
                 const product = yield exports.prisma.product.create({
-                    data: Object.assign(Object.assign({}, args.data), { vendor_id: args.vendor_id })
+                    data: {
+                        vendor_id: args === null || args === void 0 ? void 0 : args.vendor_id,
+                        name: args.data.name,
+                        description: args.data.description,
+                        price: args.data.price,
+                    }
                 });
+                (0, aws_1.default)(args.data.imageFile);
+                for (let i = 0; i < args.data.categories.length; i++) {
+                    yield exports.prisma.categoryProduct.create({
+                        data: {
+                            product_id: product === null || product === void 0 ? void 0 : product.id,
+                            category_id: args.data.categories[i]
+                        }
+                    });
+                }
                 return product;
+            });
+        },
+        createCategory(parent, args, ctx, info) {
+            return __awaiter(this, void 0, void 0, function* () {
+                const category = yield exports.prisma.category.create({
+                    data: {
+                        name: args.data.name
+                    }
+                });
+                console.log(category);
+                return { category, message: "Successful" };
             });
         },
         deleteProduct(parent, args, ctx, info) {
@@ -198,30 +301,17 @@ const resolvers = {
             });
         },
     },
-    // Subscription:{
-    //     count:{
-    //         subscribe(){
-    //             let count = 0
-    //             setInterval(()=>{
-    //                 pubSub.publish("count", {
-    //                     count: count
-    //                 })
-    //                 count++
-    //             },1000)
-    //             return pubSub.asyncIterator("count")
-    //         }
-    //     }
-    // }
 };
 const server = new apollo_server_1.ApolloServer({
     typeDefs,
     resolvers,
-    context: ({ req }) => {
-        // console.log(req.headers.authorization)
-        // return{
-        //     token: req.headers.authorization,
-        //     pubSub
-        // }  
-    }
+    context: ({ req }) => __awaiter(void 0, void 0, void 0, function* () {
+        const bearerToken = String(req.headers.authorization);
+        const token = bearerToken.split("Bearer ")[1];
+        const currenUserId = yield (0, vendorIdFromToken_1.default)(token);
+        return {
+            currenUserId: currenUserId === null || currenUserId === void 0 ? void 0 : currenUserId.userId
+        };
+    })
 });
 server.listen(`${port}`).then(({ url }) => console.log(`Server is running at ${url}`));

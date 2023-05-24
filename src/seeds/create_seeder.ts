@@ -29,6 +29,7 @@ async function createVendors(callback){
     callback()
 }
 async function createProducts(){
+    console.log("Starting.......")
     const allVendors =  await prisma.vendor.findMany()
     const arrayOfVendorsId = allVendors.map(vendor => vendor.id)
         for (let i = 0; i < arrayOfVendorsId.length; i++) {
@@ -36,6 +37,6 @@ async function createProducts(){
                 data: createRandomProducts(arrayOfVendorsId[i])
             })
         }
-    console.log("Completed")
+    console.log("Completed!!!!")
 }
 createVendors(createProducts)

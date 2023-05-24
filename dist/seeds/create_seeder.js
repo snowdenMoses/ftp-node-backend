@@ -38,6 +38,7 @@ function createVendors(callback) {
 }
 function createProducts() {
     return __awaiter(this, void 0, void 0, function* () {
+        console.log("Starting.......");
         const allVendors = yield server_1.prisma.vendor.findMany();
         const arrayOfVendorsId = allVendors.map(vendor => vendor.id);
         for (let i = 0; i < arrayOfVendorsId.length; i++) {
@@ -45,7 +46,7 @@ function createProducts() {
                 data: createRandomProducts(arrayOfVendorsId[i])
             });
         }
-        console.log("Completed");
+        console.log("Completed!!!!");
     });
 }
 createVendors(createProducts);

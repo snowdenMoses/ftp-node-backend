@@ -30,6 +30,7 @@ model Product{
     created_at DateTime? @default(now())
     updated_at DateTime? @updatedAt
     images Image[]
+    categories CategoryProduct[]
     vendor Vendor @relation(fields: [vendor_id], references: [id])
     vendor_id String
   @@map("products")
@@ -39,5 +40,26 @@ model Image{
     url String
     product Product @relation(fields: [product_id], references: [id])
     product_id String
+    created_at DateTime? @default(now())
+    updated_at DateTime? @updatedAt
   @@map("images")
+}
+model Category{
+    id String @id @default(uuid())
+    name String @unique
+    products CategoryProduct[]
+    created_at DateTime? @default(now())
+    updated_at DateTime? @updatedAt
+  @@map("categories")
+}
+model CategoryProduct{
+    category_id String
+    category Category @relation(fields: [category_id], references: [id])
+    product_id String
+    product Product @relation(fields: [product_id], references: [id])
+    created_at DateTime? @default(now())
+    updated_at DateTime? @updatedAt
+
+  @@map("categories_products")
+  @@id([category_id,product_id])
 }
