@@ -1,12 +1,16 @@
-// const AWS = require('aws-sdk');
-import AWS from 'aws-sdk'
+const AWS = require('aws-sdk');
+
+
+
 
 
 const s3ImageUpload = function(file_data){
 const s3 = new AWS.S3({
-    accessKeyId: 'AKIAYVXFOTB3WK3W4YU7',
-    secretAccessKey: '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',
-    region: 'us-east-1'
+    endpoint: "https://nyc3.digitaloceanspaces.com",
+    signatureVersion: 'v4',
+    accessKeyId: 'DO00UQBJDFT826ZUQGGQ',
+    secretAccessKey: 'OugkMRMj6YBcGKuh+5MeN87oMEkCuxfqkx0EqYHK2JY',
+    region: "nyc3"
 });
 
 const params = {

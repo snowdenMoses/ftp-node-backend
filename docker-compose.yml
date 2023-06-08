@@ -1,0 +1,45 @@
+version: "3"
+services:
+    # db:
+    #     build:
+    #       context: ./db
+    #     environment:
+    #       POSTGRES_PASSWORD: example
+    #       POSTGRES_USERNAME: postgres
+    #       POSTGRES_DATABASE: findthatplug
+    #     restart: always
+    #     ports:
+    #       - "5432:5432"
+    #     volumes:
+    #       - pg-datafolderv2:/var/lib/postgresql/data
+    # frontend:
+    #     build:
+    #       context: ./frontend
+    #     volumes:
+    #       - /app/node_modules
+    #       - ./frontend:/app
+    api:
+        build: .
+        volumes:
+          - ./data:/app
+        ports:
+          - "4000:4000"
+        environment:
+          DATABASE_URL: DATABASE_URL
+#         depends_on:
+#           - db
+#     nginx:
+#         build:
+#             context: ./nginx
+#         volumes:
+#           - ./nginx/templates:/etc/nginx/templates
+#           - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+#         restart: always
+#         ports:
+#           - "80:80"
+#         depends_on:
+#           - api
+#           - frontend
+# volumes:
+#     pg-datafolderv2:
+    

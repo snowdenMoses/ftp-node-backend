@@ -1,7 +1,7 @@
 import { faker } from '@faker-js/faker';
-import { IProduct } from '../product/product.interface';
+import { IProduct } from '../interface/product.interface';
 import { prisma } from '../server';
-import { IVendor} from '../vendor/vendor.interface';
+import { IVendor } from '../interface/vendor.interface';
 
 function createRandomVendors(): IVendor {
     return {
@@ -12,7 +12,7 @@ function createRandomVendors(): IVendor {
     };
 }
 
-function createRandomProducts(vendor_id): IProduct{
+function createRandomProducts(vendor_id): IProduct {
     return {
         name: faker.commerce.productName(),
         description: faker.commerce.productDescription(),
@@ -21,22 +21,22 @@ function createRandomProducts(vendor_id): IProduct{
     };
 }
 
-async function createVendors(callback){
+async function createVendors(callback) {
     const vendors: IVendor[] = faker.helpers.multiple(createRandomVendors, {
         count: 20,
     });
     await prisma.vendor.createMany({ data: vendors })
     callback()
 }
-async function createProducts(){
+async function createProducts() {
     console.log("Starting.......")
-    const allVendors =  await prisma.vendor.findMany()
+    const allVendors = await prisma.vendor.findMany()
     const arrayOfVendorsId = allVendors.map(vendor => vendor.id)
-        for (let i = 0; i < arrayOfVendorsId.length; i++) {
-            await prisma.product.create({
-                data: createRandomProducts(arrayOfVendorsId[i])
-            })
-        }
+    for (let i = 0; i < arrayOfVendorsId.length; i++) {
+        await prisma.product.create({
+            data: createRandomProducts(arrayOfVendorsId[i])
+        })
+    }
     console.log("Completed!!!!")
 }
 createVendors(createProducts)
